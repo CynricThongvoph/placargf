@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Placar Broadcast</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#000;font-family:Arial Black, Arial, sans-serif}
+
+/* OVERLAY */
+#overlay{
+    display:flex;
+    align-items:center;
+    height:70px;
+    margin:30px auto;
+    width:max-content;
+    position:relative;
+}
+
+/* ÁREA DO GOL */
+#golArea{
+    display:flex;
+    align-items:center;
+    position:relative;
+}
+
+/* TIMES */
+.time{
+    height:52px;
+    display:flex;
+    align-items:center;
+    padding:0 14px;
+    white-space:nowrap;
+}
+
+.escudo{
+    width:50px;
+    height:50px;
+    object-fit:contain;
+}
+.escudoA{margin-right:8px}
+.escudoB{margin-left:8px}
+
+.nome{
+    font-size:22px;
+    letter-spacing:1px;
+    transition:all .25s ease;
+}
+
+/* PLACAR */
+#placar{
+    height:52px;
+    display:flex;
+    align-items:center;
+    background:#3a004d;
+    min-width:100px;
+}
+
+.score{
+    font-size:44px;
+    padding:0 6px;
+    color:#fff;
+    line-height:0.9;
+}
+
+#divisor{
+    font-size:20px;
+    color:#fff;
+    margin:0 2px;
+}
+
+/* OVERLAY GOL */
+#golOverlay{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:34px;
+    letter-spacing:3px;
+    opacity:0;
+    pointer-events:none;
+    z-index:10;
+    transition:opacity .25s ease;
+}
+
+#golOverlay img{
+    position:absolute;
+    width:100px;
+    height:100px;
+    object-fit:contain;
+    opacity:0.08;
+}
+
+/* TEMPO */
+#tempo{
+    height:52px;
+    background:#3a004d;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    padding:0 14px;
+    font-size:18px;
+}
+
+#add{
+    margin-left:4px;
+    color:#00aaff;
+}
+
+/* CONTROLES */
+#controles{
+    width:960px;
+    margin:20px auto;
+    background:#111;
+    color:#fff;
+    padding:10px;
+    font-size:13px;
+}
+button,input{margin:3px}
+hr{border:0;border-top:1px solid #333}
+</style>
+</head>
+
+<body>
+
+<div id="overlay">
+
+    <div id="golArea">
+
+        <div id="golOverlay">
+            <img id="golEscudo">
+            <span id="golTexto">GOOOOOL</span>
+        </div>
+
+        <!-- TIME A -->
+        <div id="timeA" class="time" style="background:#6a1b3a;color:#8fd3ff">
+            <img id="escudoA" class="escudo escudoA">
+            <span id="nomeA" class="nome" data-full="BURNLEY" data-short="BUR">BUR</span>
+        </div>
+
+        <!-- PLACAR -->
+        <div id="placar">
+            <span id="gA" class="score">0</span>
+            <span id="divisor">|</span>
+            <span id="gB" class="score">1</span>
+        </div>
+
+        <!-- TIME B -->
+        <div id="timeB" class="time" style="background:#0b3c5d;color:#ffffff">
+            <span id="nomeB" class="nome" data-full="MANCHESTER CITY" data-short="MCI">MCI</span>
+            <img id="escudoB" class="escudo escudoB">
+        </div>
+
+    </div>
+
+    <!-- TEMPO -->
+    <div id="tempo">
+        <span id="min">03</span>:<span id="seg">32</span>
+        <span id="add"></span>
+    </div>
+
+</div>
+
+<!-- CONTROLES -->
+<div id="controles">
+
+<b>Nomes / Siglas</b><br>
+Sigla A <input oninput="nomeA.dataset.short=this.value; nomeA.textContent=this.value">
+Nome completo A <input oninput="nomeA.dataset.full=this.value"><br>
+
+Sigla B <input oninput="nomeB.dataset.short=this.value; nomeB.textContent=this.value">
+Nome completo B <input oninput="nomeB.dataset.full=this.value"><br>
+
+<button onclick="toggleNomes()">MOSTRAR / OCULTAR NOME COMPLETO</button>
+
+<hr>
+
+<b>Cores</b><br>
+Fundo Time A <input type="color" onchange="timeA.style.background=this.value">
+Fonte Time A <input type="color" onchange="timeA.style.color=this.value"><br>
+
+Fundo Time B <input type="color" onchange="timeB.style.background=this.value">
+Fonte Time B <input type="color" onchange="timeB.style.color=this.value"><br>
+
+Placar / Tempo <input type="color" onchange="placar.style.background=this.value; tempo.style.background=this.value">
+
+<hr>
+
+<b>Escudos</b><br>
+Escudo A <input type="file" accept="image/*" onchange="uploadEscudo(this,'A')">
+Escudo B <input type="file" accept="image/*" onchange="uploadEscudo(this,'B')">
+
+<hr>
+
+<b>Gols</b><br>
+<button onclick="gol('A')">+ Gol A</button>
+<button onclick="menos('A')">- Gol A</button>
+<button onclick="gol('B')">+ Gol B</button>
+<button onclick="menos('B')">- Gol B</button>
+
+<hr>
+
+<b>Tempo</b><br>
+Min <input id="minIn" type="number" value="0" style="width:60px">
+Seg <input id="segIn" type="number" value="0" style="width:60px">
+<button onclick="setTempo()">APLICAR TEMPO</button><br>
+
+<button onclick="start()">START</button>
+<button onclick="pause()">PAUSE</button>
+
+<hr>
+
+<b>Acréscimo</b><br>
+<input id="ain" type="number" value="0" style="width:50px">
+<button onclick="aplicarAdd()">APLICAR</button>
+<button onclick="toggleAdd()">MOSTRAR / OCULTAR</button>
+
+<hr>
+
+<b>Modelo</b><br>
+<button onclick="salvarModelo()">SALVAR MODELO</button>
+<button onclick="carregarModelo()">CARREGAR MODELO</button>
+
+<hr>
+
+<button onclick="resetar()">RESET</button>
+
+</div>
+
+<script>
+let ga=0,gb=1,t=212,int=null;
+let mostrandoCompleto=false;
+let animando=false;
+
+function toggleNomes(){
+    mostrandoCompleto=!mostrandoCompleto;
+    nomeA.textContent = mostrandoCompleto ? nomeA.dataset.full : nomeA.dataset.short;
+    nomeB.textContent = mostrandoCompleto ? nomeB.dataset.full : nomeB.dataset.short;
+}
+
+function animarGol(time){
+    if(animando) return;
+    animando=true;
+
+    const timeEl = time==="A"?timeA:timeB;
+    const escudo = time==="A"?escudoA.src:escudoB.src;
+
+    golOverlay.style.background = getComputedStyle(timeEl).backgroundColor;
+    golTexto.style.color = getComputedStyle(timeEl).color;
+    golEscudo.src = escudo || "";
+    golOverlay.style.opacity = 1;
+
+    setTimeout(()=>{
+        golOverlay.style.opacity = 0;
+        setTimeout(()=>{
+            time==="A"?gA.textContent=++ga:gB.textContent=++gb;
+            animando=false;
+        },300);
+    },1200);
+}
+
+function gol(t){animarGol(t)}
+function menos(t){
+    if(t==="A"){ga=Math.max(0,--ga);gA.textContent=ga}
+    else{gb=Math.max(0,--gb);gB.textContent=gb}
+}
+
+function uploadEscudo(input,time){
+    if(!input.files[0])return;
+    const r=new FileReader();
+    r.onload=e=>(time==="A"?escudoA:escudoB).src=e.target.result;
+    r.readAsDataURL(input.files[0]);
+}
+
+function render(){
+    min.textContent=String(Math.floor(t/60)).padStart(2,"0");
+    seg.textContent=String(t%60).padStart(2,"0");
+}
+
+function start(){ if(!int) int=setInterval(()=>{t++;render()},1000) }
+function pause(){ clearInterval(int);int=null }
+
+function setTempo(){
+    t = (+minIn.value*60)+(+segIn.value);
+    render();
+}
+
+function aplicarAdd(){
+    add.textContent = ain.value>0 ? '+'+ain.value : '';
+}
+
+function toggleAdd(){
+    add.style.display = add.style.display==="none"?"inline":"none";
+}
+
+function resetar(){
+    ga=gb=t=0;
+    gA.textContent=gB.textContent=0;
+    render();
+}
+
+function salvarModelo(){
+    localStorage.setItem("placarModelo", JSON.stringify({
+        ga,gb,t,
+        nomeA:nomeA.dataset,
+        nomeB:nomeB.dataset,
+        bgA:timeA.style.background,
+        bgB:timeB.style.background,
+        corA:timeA.style.color,
+        corB:timeB.style.color,
+        placarBg:placar.style.background
+    }));
+}
+
+function carregarModelo(){
+    const m=JSON.parse(localStorage.getItem("placarModelo"));
+    if(!m)return;
+    ga=m.ga;gb=m.gb;t=m.t;
+    gA.textContent=ga;gB.textContent=gb;render();
+    Object.assign(nomeA.dataset,m.nomeA);
+    Object.assign(nomeB.dataset,m.nomeB);
+    timeA.style.background=m.bgA;
+    timeB.style.background=m.bgB;
+    timeA.style.color=m.corA;
+    timeB.style.color=m.corB;
+    placar.style.background=m.placarBg;
+    tempo.style.background=m.placarBg;
+}
+
+render();
+</script>
+
+</body>
+</html>
