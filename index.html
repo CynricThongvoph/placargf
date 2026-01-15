@@ -329,8 +329,28 @@ function carregarModelo(){
     tempo.style.background=m.placarBg;
 }
 
+<script>
+const params = new URLSearchParams(window.location.search);
+const isOverlay = params.get("overlay") === "1";
+
+if (isOverlay) {
+    // Remove controles
+    const controles = document.getElementById("controles");
+    if (controles) controles.remove();
+
+    // Fundo transparente
+    document.body.style.background = "transparent";
+
+    // Centraliza overlay sem margem
+    const overlay = document.getElementById("overlay");
+    overlay.style.margin = "0";
+}
+</script>
+
+
 render();
 </script>
 
 </body>
 </html>
+
